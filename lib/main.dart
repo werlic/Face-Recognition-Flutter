@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+// import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:flutter/material.dart';
 import 'detector_painters.dart';
 import 'utils.dart';
@@ -52,11 +53,11 @@ class _MyHomePageState extends State<_MyHomePage> {
     try {
       final gpuDelegateV2 = tfl.GpuDelegateV2(
           options: tfl.GpuDelegateOptionsV2(
-        false,
-        tfl.TfLiteGpuInferenceUsage.fastSingleAnswer,
-        tfl.TfLiteGpuInferencePriority.minLatency,
-        tfl.TfLiteGpuInferencePriority.auto,
-        tfl.TfLiteGpuInferencePriority.auto,
+        // false,
+        // tfl.TfLiteGpuInferenceUsage.fastSingleAnswer,
+        // tfl.TfLiteGpuInferencePriority.minLatency,
+        // tfl.TfLiteGpuInferencePriority.auto,
+        // tfl.TfLiteGpuInferencePriority.auto,
       ));
 
       var interpreterOptions = tfl.InterpreterOptions()
@@ -72,7 +73,7 @@ class _MyHomePageState extends State<_MyHomePage> {
     await loadModel();
     CameraDescription description = await getCamera(_direction);
 
-    ImageRotation rotation = rotationIntToImageRotation(
+    InputImageRotation rotation = rotationIntToImageRotation(
       description.sensorOrientation,
     );
 
@@ -131,11 +132,12 @@ class _MyHomePageState extends State<_MyHomePage> {
   }
 
   HandleDetection _getDetectionMethod() {
-    final faceDetector = FirebaseVision.instance.faceDetector(
+    final faceDetector = GoogleMlKit.vision.faceDetector(
       FaceDetectorOptions(
         mode: FaceDetectorMode.accurate,
       ),
     );
+    
     return faceDetector.processImage;
   }
 
@@ -283,7 +285,7 @@ class _MyHomePageState extends State<_MyHomePage> {
   String _recog(imglib.Image img) {
     List input = imageToByteListFloat32(img, 112, 128, 128);
     input = input.reshape([1, 112, 112, 3]);
-    List output = List(1 * 192).reshape([1, 192]);
+    List output = List.filled(1 * 192, []).reshape([1, 192]);
     interpreter.run(input, output);
     output = output.reshape([192]);
     e1 = List.from(output);
@@ -342,7 +344,7 @@ class _MyHomePageState extends State<_MyHomePage> {
             );
           }),
       actions: <Widget>[
-        new FlatButton(
+        new TextButton(
           child: Text("OK"),
           onPressed: () {
             _initializeCamera();
@@ -378,14 +380,14 @@ class _MyHomePageState extends State<_MyHomePage> {
         ],
       ),
       actions: <Widget>[
-        new FlatButton(
+        new TextButton(
             child: Text("Save"),
             onPressed: () {
               _handle(_name.text.toUpperCase());
               _name.clear();
               Navigator.pop(context);
             }),
-        new FlatButton(
+        new TextButton(
           child: Text("Cancel"),
           onPressed: () {
             _initializeCamera();
